@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>National Bank - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-left">
+        <h1 class="nav-title">🏦 National Bank Dashboard</h1>
+        <p class="branch-info" id="branchInfo">Select Branch</p>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+    
+    <div class="row">
+        <div class="card">
+            <h2>🏢 Select Branch</h2>
+            <select id="branchSelect" onchange="selectBranch()">
+                <option value="">-- Choose Branch --</option>
+                <option value="1">Mumbai Main - Downtown Mumbai</option>
+                <option value="2">Delhi Branch - New Delhi</option>
+                <option value="3">Bangalore Branch - Bangalore</option>
+                <option value="4">Pune Branch - Pune</option>
+                <option value="5">Kolkata Branch - Kolkata</option>
+            </select>
+            <button onclick="loadBranchInfo()" class="btn-primary" style="margin-top: 10px;">View Branch Info</button>
+        </div>
+
+        <div class="card">
+            <h2>👤 Create Account</h2>
+            <input id="cid" placeholder="Customer ID" type="number">
+            <select id="branchIdAccount">
+                <option value="">-- Select Branch --</option>
+                <option value="1">Mumbai Main</option>
+                <option value="2">Delhi Branch</option>
+                <option value="3">Bangalore Branch</option>
+                <option value="4">Pune Branch</option>
+                <option value="5">Kolkata Branch</option>
+            </select>
+            <input id="balance" type="number" placeholder="Initial Balance" step="0.01">
+            <button onclick="createAccount()">Create Account</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="card">
+            <h2>💰 Transfer Money</h2>
+            <input id="fromAcc" placeholder="From Account ID" type="number">
+            <input id="toAcc" placeholder="To Account ID" type="number">
+            <input id="amount" placeholder="Amount" type="number" step="0.01">
+            <select id="transType">
+                <option value="">Select Type</option>
+                <option value="Transfer">Transfer</option>
+                <option value="Deposit">Deposit</option>
+                <option value="Withdrawal">Withdrawal</option>
+            </select>
+            <button onclick="transfer()">Transfer Money</button>
+        </div>
+
+        <div class="card">
+            <h2>💳 Account Details</h2>
+            <input id="checkAccId" placeholder="Enter Account ID" type="number">
+            <button onclick="getAccountDetails()" class="btn-primary">Check Account</button>
+            <div id="accountDetails" style="margin-top: 15px; display: none;">
+                <p><strong>Balance:</strong> <span id="accBalance">$0.00</span></p>
+                <p><strong>Status:</strong> <span id="accStatus">Active</span></p>
+                <p><strong>Account Type:</strong> <span id="accType">N/A</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card full-width">
+        <h2>📊 Transaction History</h2>
+        <div class="search-section">
+            <input id="viewAcc" placeholder="Enter Account ID" type="number">
+            <button onclick="loadTransactions()" class="btn-primary">Search</button>
+            <button onclick="previewAllTransactions()" class="btn-secondary">View All</button>
+        </div>
+
+        <div id="transactionContainer">
+            <table class="transaction-table" id="table">
+                <thead>
+                    <tr>
+                        <th>Trans ID</th>
+                        <th>From Acc</th>
+                        <th>To Acc</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8" style="text-align: center; color: #999;">No transactions. Search to load data.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="chartContainer" style="margin-top: 30px; display: none;">
+            <h3>Transaction Summary</h3>
+            <div class="stats">
+                <div class="stat-card">
+                    <p class="stat-label">Total Transactions</p>
+                    <p class="stat-value" id="totalTrans">0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">Total Amount</p>
+                    <p class="stat-value" id="totalAmount">$0.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
