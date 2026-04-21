@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>National Bank - Saving Account Transactions</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-left">
+        <h1 class="nav-title">🏦 Saving Account Transactions</h1>
+        <p class="branch-info">Account: <strong id="accountNumber">-</strong></p>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="card">
+            <h2>💰 Account Balance</h2>
+            <p><strong>💵 Current Balance:</strong> <span id="currentBalance">$0.00</span></p>
+            <p><strong>🔒 Minimum Balance:</strong> <span id="minimumBalance">$1,000.00</span></p>
+            <p><strong>✅ Available for Withdrawal:</strong> <span id="availableBalance">$0.00</span></p>
+            <p><strong>📊 Monthly Withdrawal Limit:</strong> <span id="withdrawalLimit">5 transactions</span></p>
+            <p><strong>📈 Interest Rate:</strong> <span id="interestRate">0%</span></p>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Quick Actions</h2>
+            <button onclick="showDeposit()" class="btn-primary">💳 Deposit Money</button>
+            <button onclick="showWithdraw()" class="btn-secondary">💸 Withdraw Money</button>
+            <button onclick="showTransfer()" class="btn-primary">🔄 Transfer to Another Account</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="card" id="transactionForm" style="display: none;">
+            <h2 id="formTitle">💳 Transaction</h2>
+            <div id="depositForm" style="display: none;">
+                <input id="depositAmount" placeholder="💰 Deposit Amount" type="number" step="0.01">
+                <button onclick="processDeposit()">💳 Deposit</button>
+            </div>
+            <div id="withdrawForm" style="display: none;">
+                <input id="withdrawAmount" placeholder="💸 Withdraw Amount" type="number" step="0.01">
+                <p class="help-text">💡 Saving accounts require minimum balance of $1,000 and have monthly withdrawal limits.</p>
+                <button onclick="processWithdraw()">💸 Withdraw</button>
+            </div>
+            <div id="transferForm" style="display: none;">
+                <input id="transferToAccount" placeholder="🏦 Recipient Account Number" type="number">
+                <input id="transferAmount" placeholder="💰 Transfer Amount" type="number" step="0.01">
+                <input id="transferDescription" placeholder="Description (optional)">
+                <button onclick="processTransfer()">Transfer</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Recent Transactions</h2>
+            <div id="recentTransactions">
+                <p>Loading transactions...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+let currentAccount = null;
+let accountData = null;
+let monthlyWithdrawals = 0; // In a real app, this would be calculated from database
+
+function getAccountFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('account');
+}
+
+function initSavingTransactionPage() {
+    const accountNumber = getAccountFromURL();
+    if (!accountNumber) {
+        alert("No account specified");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    document.getElementById("accountNumber").textContent = accountNumber;
+    loadAccountDetails(accountNumber);
+    loadRecentTransactions(accountNumber);
+}
+
+function loadAccountDetails(accountNumber) {
+    fetchAPI(`/account/${accountNumber}`)
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        accountData = data;
+        const currentBalance = parseFloat(data.Balance);
+        
+        // Fetch minimum balance and interest rate from SavingAccount table
+        fetchAPI(`/saving-account/${accountNumber}`)
+        .then(savingData => {
+            const minimumBalance = savingData.MinimumBalance || 1000;
+            const availableBalance = Math.max(0, currentBalance - minimumBalance);
+            const interestRate = savingData.InterestRate || 0;
+
+            document.getElementById("currentBalance").textContent = `$${currentBalance.toFixed(2)}`;
+            document.getElementById("minimumBalance").textContent = `$${parseFloat(minimumBalance).toFixed(2)}`;
+            document.getElementById("availableBalance").textContent = `$${availableBalance.toFixed(2)}`;
+            document.getElementById("interestRate").textContent = `${interestRate}%`;
+        })
+        .catch(err => {
+            console.error("Error loading saving account info:", err);
+            // Fallback to defaults
+            const minimumBalance = 1000;
+            const availableBalance = Math.max(0, currentBalance - minimumBalance);
+            document.getElementById("currentBalance").textContent = `$${currentBalance.toFixed(2)}`;
+            document.getElementById("minimumBalance").textContent = `$${minimumBalance.toFixed(2)}`;
+            document.getElementById("availableBalance").textContent = `$${availableBalance.toFixed(2)}`;
+            document.getElementById("interestRate").textContent = "0%";
+        });
+    })
+    .catch(err => alert("Error loading account: " + err.message));
+}
+
+function loadRecentTransactions(accountNumber) {
+    fetchAPI(`/transactions/${accountNumber}`)
+    .then(data => {
+        const container = document.getElementById("recentTransactions");
+        if (data.error) {
+            container.innerHTML = "<p>Error loading transactions</p>";
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            container.innerHTML = "<p>No recent transactions</p>";
+            return;
+        }
+
+        let html = "<table class='transaction-table'><thead><tr><th>Type</th><th>Amount</th><th>Date</th></tr></thead><tbody>";
+        data.slice(0, 5).forEach(txn => {
+            html += `<tr>
+                <td>${txn.Type.toUpperCase()}</td>
+                <td>$${parseFloat(txn.Amount).toFixed(2)}</td>
+                <td>${txn.TxnDate}</td>
+            </tr>`;
+        });
+        html += "</tbody></table>";
+        container.innerHTML = html;
+    })
+    .catch(err => alert("Error loading transactions: " + err.message));
+}
+
+function showDeposit() {
+    hideAllForms();
+    document.getElementById("formTitle").textContent = "Deposit Money";
+    document.getElementById("depositForm").style.display = "block";
+    document.getElementById("transactionForm").style.display = "block";
+}
+
+function showWithdraw() {
+    hideAllForms();
+    document.getElementById("formTitle").textContent = "Withdraw Money";
+    document.getElementById("withdrawForm").style.display = "block";
+    document.getElementById("transactionForm").style.display = "block";
+}
+
+function showTransfer() {
+    hideAllForms();
+    document.getElementById("formTitle").textContent = "Transfer Money";
+    document.getElementById("transferForm").style.display = "block";
+    document.getElementById("transactionForm").style.display = "block";
+}
+
+function hideAllForms() {
+    document.getElementById("depositForm").style.display = "none";
+    document.getElementById("withdrawForm").style.display = "none";
+    document.getElementById("transferForm").style.display = "none";
+}
+
+function processDeposit() {
+    const amount = document.getElementById("depositAmount").value;
+    if (!amount || parseFloat(amount) <= 0) {
+        alert("Please enter a valid amount");
+        return;
+    }
+
+    processTransaction(getAccountFromURL(), amount, "credit")
+    .then(data => {
+        alert("Deposit successful!");
+        loadAccountDetails(getAccountFromURL());
+        loadRecentTransactions(getAccountFromURL());
+        hideAllForms();
+        document.getElementById("transactionForm").style.display = "none";
+    })
+    .catch(err => alert("Deposit failed: " + err.message));
+}
+
+function processWithdraw() {
+    const amount = document.getElementById("withdrawAmount").value;
+    if (!amount || parseFloat(amount) <= 0) {
+        alert("Please enter a valid amount");
+        return;
+    }
+
+    processTransaction(getAccountFromURL(), amount, "debit")
+    .then(data => {
+        alert("Withdrawal successful!");
+        loadAccountDetails(getAccountFromURL());
+        loadRecentTransactions(getAccountFromURL());
+        hideAllForms();
+        document.getElementById("transactionForm").style.display = "none";
+    })
+    .catch(err => alert("Withdrawal failed: " + err.message));
+}
+
+function processTransfer() {
+    const toAccount = document.getElementById("transferToAccount").value;
+    const amount = document.getElementById("transferAmount").value;
+    const description = document.getElementById("transferDescription").value;
+
+    if (!toAccount || !amount || parseFloat(amount) <= 0) {
+        alert("Please enter recipient account and valid amount");
+        return;
+    }
+
+    if (toAccount === getAccountFromURL()) {
+        alert("Cannot transfer to the same account");
+        return;
+    }
+
+    const transferAmount = parseFloat(amount);
+    const currentBalance = parseFloat(accountData.Balance);
+    const minimumBalance = 1000;
+
+    // Check minimum balance after transfer
+    if (currentBalance - transferAmount < minimumBalance) {
+        alert("Cannot transfer. Account must maintain minimum balance of $1,000.");
+        return;
+    }
+
+    // Use the new transfer endpoint
+    fetchAPI("/transfer", {
+        method: "POST",
+        body: JSON.stringify({ 
+            fromAccount: getAccountFromURL(), 
+            toAccount: toAccount, 
+            amount: amount 
+        })
+    })
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("Transfer successful!");
+            loadAccountDetails(getAccountFromURL());
+            loadRecentTransactions(getAccountFromURL());
+            hideAllForms();
+            document.getElementById("transactionForm").style.display = "none";
+        }
+    })
+    .catch(err => alert("Transfer failed: " + err.message));
+}
+
+function processTransaction(accountNumber, amount, type) {
+    return fetchAPI("/transaction", {
+        method: "POST",
+        body: JSON.stringify({ accountNumber, amount, type })
+    })
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        return data;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initSavingTransactionPage);
+</script>
+</body>
+</html>

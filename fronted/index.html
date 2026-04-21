@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8" />
     <title>National Bank System</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -9,32 +10,23 @@
 <div class="container">
     <div class="header">
         <h1>🏦 National Bank</h1>
-        <p>Multi-Branch Banking System</p>
+        <p>Employee onboarding and customer login system</p>
     </div>
 
     <div class="card">
-        <h2>🔐 Login</h2>
-        <input id="loginContact" placeholder="Contact Number" type="tel">
-        <input id="loginPassword" type="password" placeholder="Password">
+        <h2>🛠️ Admin Portal</h2>
+        <input id="adminUser" placeholder="Admin Username">
+        <input id="adminPassword" placeholder="Admin Password" type="password">
+        <button onclick="adminLogin()">Go to Admin Portal</button>
+        <p class="help-text">Admin credentials required to access the admin page.</p>
+    </div>
+
+    <div class="card">
+        <h2>🔐 Customer Login</h2>
+        <input id="loginId" placeholder="Login ID (e.g. CUST0001)">
+        <input id="loginPassword" placeholder="Password" type="password">
         <button onclick="login()">Login</button>
-    </div>
-
-    <div class="card">
-        <h2>📝 Register New Customer</h2>
-        <input id="name" placeholder="Full Name">
-        <input id="address" placeholder="Address">
-        <input id="contact" placeholder="Contact Number" type="tel">
-        <input id="email" placeholder="Email" type="email">
-        <input id="dob" type="date" placeholder="Date of Birth">
-        <input id="password" type="password" placeholder="Password">
-        <button onclick="register()">Register</button>
-    </div>
-
-    <div class="card">
-        <h2>ℹ️ Contact Us</h2>
-        <p><strong>National Bank Headquarters:</strong> Mumbai</p>
-        <p><strong>Toll Free:</strong> 1800-123-4567</p>
-        <p><strong>Available Branches:</strong> Mumbai, Delhi, Bangalore, Pune, Kolkata</p>
+        <p class="help-text">Customer should use their unique Login ID and password issued by admin.</p>
     </div>
 </div>
 

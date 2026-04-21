@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>National Bank - Admin Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-left">
+        <h1 class="nav-title">🛡️ Admin Portal</h1>
+        <p class="branch-info">Create customers, assign accounts, and enable internet banking.</p>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='index.html'">Back to Home</button>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="card">
+            <h2>👥 Create New Customer</h2>
+            <input id="adminName" placeholder="Full Name">
+            <input id="adminContact" placeholder="Contact Number" type="tel">
+            <input id="adminEmail" placeholder="Email Address" type="email">
+            <input id="adminAddress" placeholder="Address">
+            <input id="adminDob" type="date" placeholder="Date of Birth">
+            <input id="adminCustomerPassword" placeholder="Password (optional)" type="password">
+            <select id="adminAccountType">
+                <option value="">-- Create first account type --</option>
+                <option value="saving">Saving</option>
+                <option value="current">Current</option>
+            </select>
+            <input id="adminInitialDeposit" type="number" placeholder="Initial Deposit" step="0.01">
+            <label><input id="adminInternetBanking" type="checkbox"> Enable Internet Banking</label>
+            <button onclick="createCustomerAdmin()">Create Customer & Account</button>
+        </div>
+
+        <div class="card">
+            <h2>➕ Create Additional Account</h2>
+            <input id="existingLoginId" placeholder="Existing Customer Login ID">
+            <select id="existingAccountType">
+                <option value="">-- Select Account Type --</option>
+                <option value="saving">Saving</option>
+                <option value="current">Current</option>
+            </select>
+            <input id="existingInitialDeposit" type="number" placeholder="Initial Deposit" step="0.01">
+            <label><input id="existingInternetBanking" type="checkbox"> Enable Internet Banking</label>
+            <button onclick="createAccountAdmin()">Create Account</button>
+        </div>
+    </div>
+
+    <div class="card full-width">
+        <h2>✅ Result</h2>
+        <pre id="adminResult" style="white-space: pre-wrap; color: #111;">Use this panel to create a new customer and assign the account number from the 4000-series sequentially.</pre>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

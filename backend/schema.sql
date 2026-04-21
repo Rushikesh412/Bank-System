@@ -2,7 +2,9 @@
 CREATE DATABASE IF NOT EXISTS BankSystem;
 USE BankSystem;
 
--- Bank Table
+-- ============================================
+-- 1️⃣ BANK TABLE (5 attributes + PK)
+-- ============================================
 CREATE TABLE IF NOT EXISTS Bank (
     BankId INT AUTO_INCREMENT PRIMARY KEY,
     BankName VARCHAR(100) NOT NULL UNIQUE,
@@ -11,87 +13,100 @@ CREATE TABLE IF NOT EXISTS Bank (
     ContactNumber VARCHAR(20)
 );
 
--- Branch Table
+-- ============================================
+-- 2️⃣ BRANCH TABLE (1 Bank → Many Branches)
+-- ============================================
 CREATE TABLE IF NOT EXISTS Branch (
     BranchId INT AUTO_INCREMENT PRIMARY KEY,
     BranchName VARCHAR(100) NOT NULL,
     Location VARCHAR(255) NOT NULL,
-    BankId INT,
+    BankId INT NOT NULL,
     ContactNumber VARCHAR(20),
-    FOREIGN KEY (BankId) REFERENCES Bank(BankId)
+    FOREIGN KEY (BankId) REFERENCES Bank(BankId) ON DELETE CASCADE
 );
 
--- Customer Table
+-- ============================================
+-- 3️⃣ CUSTOMER TABLE (customer login + internet banking)
+-- ============================================
 CREATE TABLE IF NOT EXISTS Customer (
     CId INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(100) NOT NULL,
-    Address VARCHAR(255),
-    Contact VARCHAR(20) UNIQUE NOT NULL,
-    DOB DATE,
-    Email VARCHAR(100) UNIQUE,
+    LoginId VARCHAR(20) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL,
-    JoinDate DATE,
-    Status VARCHAR(20) DEFAULT 'Active'
+    Name VARCHAR(100) NOT NULL,
+    Contact VARCHAR(20) UNIQUE NOT NULL,
+    Email VARCHAR(100),
+    Address VARCHAR(255),
+    DOB DATE NOT NULL,
+    IsInternetBankingEnabled BOOLEAN DEFAULT FALSE
 );
 
--- Employee Table
+-- ============================================
+-- 4️⃣ EMPLOYEE TABLE (5 attributes + PK)
+-- ============================================
 CREATE TABLE IF NOT EXISTS Employee (
     EId INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(100) NOT NULL,
-    Position VARCHAR(100) NOT NULL,
-    Department VARCHAR(100),
-    Contact VARCHAR(20),
-    Email VARCHAR(100) UNIQUE,
-    Salary DECIMAL(10,2),
-    BranchId INT,
-    JoinDate DATE,
-    FOREIGN KEY (BranchId) REFERENCES Branch(BranchId)
+    Gender ENUM('M', 'F', 'O') NOT NULL,
+    Contact VARCHAR(20) NOT NULL,
+    Address VARCHAR(255),
+    BranchId INT NOT NULL,
+    FOREIGN KEY (BranchId) REFERENCES Branch(BranchId) ON DELETE CASCADE
 );
 
--- Bank Account Table
+-- ============================================
+-- 5️⃣ BANKACCOUNT TABLE (with sequential account number)
+-- ============================================
 CREATE TABLE IF NOT EXISTS BankAccount (
     AccId INT AUTO_INCREMENT PRIMARY KEY,
+    AccountNumber INT NOT NULL UNIQUE,
     CId INT NOT NULL,
-    BranchId INT NOT NULL,
     Balance DECIMAL(15,2) DEFAULT 0.00,
-    OpenDate DATE,
-    Status VARCHAR(20) DEFAULT 'Active',
-    FOREIGN KEY (CId) REFERENCES Customer(CId),
-    FOREIGN KEY (BranchId) REFERENCES Branch(BranchId)
+    AccountType ENUM('current', 'saving') NOT NULL,
+    IFSC VARCHAR(20) DEFAULT 'NBIN0000001',
+    Status ENUM('active', 'inactive') DEFAULT 'active',
+    InternetBankingEnabled BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (CId) REFERENCES Customer(CId) ON DELETE CASCADE
 );
 
--- Current Account Table
+-- ============================================
+-- 5.1️⃣ CURRENT ACCOUNT TABLE (extends BankAccount)
+-- ============================================
 CREATE TABLE IF NOT EXISTS CurrentAccount (
     CurrentAccId INT AUTO_INCREMENT PRIMARY KEY,
     AccId INT NOT NULL UNIQUE,
     OverdraftLimit DECIMAL(15,2) DEFAULT 0.00,
     ChequeBookIssued BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (AccId) REFERENCES BankAccount(AccId)
+    FOREIGN KEY (AccId) REFERENCES BankAccount(AccId) ON DELETE CASCADE
 );
 
--- Saving Account Table
+-- ============================================
+-- 5.2️⃣ SAVING ACCOUNT TABLE (extends BankAccount)
+-- ============================================
 CREATE TABLE IF NOT EXISTS SavingAccount (
     SavingAccId INT AUTO_INCREMENT PRIMARY KEY,
     AccId INT NOT NULL UNIQUE,
     InterestRate DECIMAL(5,2) DEFAULT 4.50,
     MinimumBalance DECIMAL(15,2) DEFAULT 1000.00,
     WithdrawalLimit INT DEFAULT 5,
-    FOREIGN KEY (AccId) REFERENCES BankAccount(AccId)
+    FOREIGN KEY (AccId) REFERENCES BankAccount(AccId) ON DELETE CASCADE
 );
 
--- Transactions Table
+-- ============================================
+-- 6️⃣ TRANSACTION TABLE (4 attributes + PK + FK)
+-- ============================================
 CREATE TABLE IF NOT EXISTS Transactions (
     TransId INT AUTO_INCREMENT PRIMARY KEY,
-    FromAcc INT NOT NULL,
-    ToAcc INT NOT NULL,
+    AccountId INT NOT NULL,
     Amount DECIMAL(15,2) NOT NULL,
-    Type VARCHAR(50) NOT NULL,
-    TransactionDate DATE NOT NULL,
-    TransactionTime TIME NOT NULL,
-    Status VARCHAR(20) DEFAULT 'Completed',
-    FOREIGN KEY (FromAcc) REFERENCES BankAccount(AccId),
-    FOREIGN KEY (ToAcc) REFERENCES BankAccount(AccId)
+    Type ENUM('credit', 'debit') NOT NULL,
+    TxnDate DATE DEFAULT (CURDATE()),
+    TxnTime TIME DEFAULT (CURTIME()),
+    FOREIGN KEY (AccountId) REFERENCES BankAccount(AccId) ON DELETE CASCADE
 );
+
+-- ============================================
+-- INSERT MASTER DATA
+-- ============================================
 
 -- 1️⃣ INSERT INTO BANK (Only 1 Bank)
 INSERT INTO Bank (BankName, HeadOffice, FoundedYear, ContactNumber) 
@@ -106,49 +121,47 @@ VALUES
 ('Pune Branch', 'Pune', 1, '9876543213'),
 ('Kolkata Branch', 'Kolkata', 1, '9876543214');
 
--- 3️⃣ INSERT INTO CUSTOMER (no dependencies)
-INSERT INTO Customer (Name, Address, Contact, DOB, Email, Password, JoinDate, Status) 
+-- 3️⃣ INSERT INTO CUSTOMER (login credentials included)
+INSERT INTO Customer (LoginId, Password, Name, Contact, Email, Address, DOB, IsInternetBankingEnabled) 
 VALUES 
-('Rajesh Sharma', 'Mumbai', '9876543210', '1985-05-20', 'rajesh@email.com', 'pass123', NOW(), 'Active'),
-('Priya Desai', 'Pune', '9876543211', '1990-08-15', 'priya@email.com', 'pass123', NOW(), 'Active'),
-('Amit Kumar', 'Delhi', '9876543212', '1988-12-10', 'amit@email.com', 'pass123', NOW(), 'Active'),
-('Neha Patel', 'Bangalore', '9876543213', '1992-03-25', 'neha@email.com', 'pass123', NOW(), 'Active'),
-('Vikram Singh', 'Kolkata', '9876543214', '1987-07-12', 'vikram@email.com', 'pass123', NOW(), 'Active'),
-('Sneha Iyer', 'Chennai', '9876543215', '1993-11-08', 'sneha@email.com', 'pass123', NOW(), 'Active');
+('CUST0001', 'pwd1234', 'Rajesh Sharma', '9876543210', 'rajesh@example.com', 'Mumbai', '1985-05-20', TRUE),
+('CUST0002', 'pwd1234', 'Priya Desai', '9876543211', 'priya@example.com', 'Pune', '1990-08-15', TRUE),
+('CUST0003', 'pwd1234', 'Amit Kumar', '9876543212', 'amit@example.com', 'Delhi', '1988-12-10', FALSE),
+('CUST0004', 'pwd1234', 'Neha Patel', '9876543213', 'neha@example.com', 'Bangalore', '1992-03-25', FALSE),
+('CUST0005', 'pwd1234', 'Vikram Singh', '9876543214', 'vikram@example.com', 'Kolkata', '1987-07-12', TRUE),
+('CUST0006', 'pwd1234', 'Sneha Iyer', '9876543215', 'sneha@example.com', 'Chennai', '1993-11-08', TRUE);
 
--- 4️⃣ INSERT INTO EMPLOYEE (depends on Branch - all branches under 1 Bank)
-INSERT INTO Employee (Name, Position, Department, Contact, Email, Salary, BranchId, JoinDate) 
+-- 4️⃣ INSERT INTO EMPLOYEE (5 fields: Name, Gender, Contact, Address, EId-PK, linked to Branch)
+INSERT INTO Employee (Name, Gender, Contact, Address, BranchId) 
 VALUES 
-('Vikram Singh', 'Manager', 'Operations', '9111111111', 'vikram.emp@bank.com', 50000, 1, NOW()),
-('Anjali Verma', 'Cashier', 'Customer Service', '9111111112', 'anjali@bank.com', 30000, 1, NOW()),
-('Rohan Gupta', 'Loan Officer', 'Loans', '9111111113', 'rohan@bank.com', 40000, 1, NOW()),
-('Sneha Iyer', 'Account Manager', 'Accounts', '9111111114', 'sneha.emp@bank.com', 35000, 2, NOW()),
-('Arjun Nair', 'Manager', 'Operations', '9111111115', 'arjun@bank.com', 52000, 2, NOW()),
-('Divya Sharma', 'Cashier', 'Customer Service', '9111111116', 'divya@bank.com', 31000, 3, NOW()),
-('Karan Joshi', 'Loan Officer', 'Loans', '9111111117', 'karan@bank.com', 42000, 4, NOW()),
-('Pooja Singh', 'Account Manager', 'Accounts', '9111111118', 'pooja@bank.com', 36000, 5, NOW());
+('Vikram Singh', 'M', '9111111111', 'Andheri, Mumbai', 1),
+('Anjali Verma', 'F', '9111111112', 'Dadar, Mumbai', 1),
+('Rohan Gupta', 'M', '9111111113', 'Bandra, Mumbai', 1),
+('Sneha Iyer', 'F', '9111111114', 'Pune', 2),
+('Arjun Nair', 'M', '9111111115', 'Kothrud, Pune', 2),
+('Divya Sharma', 'F', '9111111116', 'Jayanagar, Bangalore', 3),
+('Karan Joshi', 'M', '9111111117', 'CP, Delhi', 4),
+('Pooja Singh', 'F', '9111111118', 'Salt Lake, Kolkata', 5);
 
--- 5️⃣ INSERT INTO BANKACCOUNT (depends on Customer & Branch)
-INSERT INTO BankAccount (CId, BranchId, Balance, OpenDate, Status) 
+-- 5️⃣ INSERT INTO BANKACCOUNT (sequential AccountNumber starting from 4001)
+INSERT INTO BankAccount (AccountNumber, CId, Balance, AccountType, IFSC, Status, InternetBankingEnabled) 
 VALUES 
-(1, 1, 50000.00, NOW(), 'Active'),
-(1, 1, 75000.00, NOW(), 'Active'),     -- Same customer, 2 accounts
-(2, 4, 100000.00, NOW(), 'Active'),
-(3, 2, 30000.00, NOW(), 'Active'),
-(4, 3, 150000.00, NOW(), 'Active'),
-(5, 1, 25000.00, NOW(), 'Active'),
-(6, 2, 80000.00, NOW(), 'Active');
+(4001, 1, 50000.00, 'current', 'NBIN0000001', 'active', TRUE),
+(4002, 1, 75000.00, 'saving', 'NBIN0000001', 'active', TRUE),
+(4003, 2, 100000.00, 'saving', 'NBIN0000001', 'active', TRUE),
+(4004, 3, 30000.00, 'current', 'NBIN0000001', 'active', FALSE),
+(4005, 4, 150000.00, 'saving', 'NBIN0000001', 'active', FALSE),
+(4006, 5, 25000.00, 'current', 'NBIN0000001', 'active', TRUE),
+(4007, 6, 80000.00, 'saving', 'NBIN0000001', 'active', TRUE);
 
--- 6️⃣ INSERT INTO CURRENTACCOUNT (depends on BankAccount)
--- Current Accounts (AccId 1, 3, 5)
+-- 5.1️⃣ INSERT INTO CURRENTACCOUNT (for current accounts: AccId 1,3,5)
 INSERT INTO CurrentAccount (AccId, OverdraftLimit, ChequeBookIssued) 
 VALUES 
 (1, 10000.00, TRUE),
 (3, 15000.00, TRUE),
 (5, 5000.00, FALSE);
 
--- 7️⃣ INSERT INTO SAVINGACCOUNT (depends on BankAccount)
--- Saving Accounts (AccId 2, 4, 6, 7)
+-- 5.2️⃣ INSERT INTO SAVINGACCOUNT (for saving accounts: AccId 2,4,6,7)
 INSERT INTO SavingAccount (AccId, InterestRate, MinimumBalance, WithdrawalLimit) 
 VALUES 
 (2, 5.50, 1000.00, 5),
@@ -156,14 +169,14 @@ VALUES
 (6, 5.00, 1000.00, 5),
 (7, 5.25, 2000.00, 3);
 
--- 8️⃣ INSERT INTO TRANSACTIONS (depends on BankAccount)
-INSERT INTO Transactions (FromAcc, ToAcc, Amount, Type, TransactionDate, TransactionTime, Status) 
+-- 6️⃣ INSERT INTO TRANSACTIONS (4 fields: TransId-PK, Amount, Type(credit/debit), TxnDate, TxnTime, AccountId-FK)
+INSERT INTO Transactions (AccountId, Amount, Type, TxnDate, TxnTime) 
 VALUES 
-(1, 2, 5000.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(2, 3, 2500.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(3, 4, 1000.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(4, 5, 3000.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(5, 6, 1500.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(1, 4, 10000.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(6, 3, 2000.00, 'Transfer', NOW(), CURTIME(), 'Completed'),
-(2, 5, 500.00, 'Deposit', NOW(), CURTIME(), 'Completed');
+(1, 5000.00, 'credit', CURDATE(), CURTIME()),
+(2, 2500.00, 'debit', CURDATE(), CURTIME()),
+(3, 1000.00, 'credit', CURDATE(), CURTIME()),
+(4, 3000.00, 'debit', CURDATE(), CURTIME()),
+(5, 1500.00, 'credit', CURDATE(), CURTIME()),
+(6, 10000.00, 'debit', CURDATE(), CURTIME()),
+(7, 2000.00, 'credit', CURDATE(), CURTIME()),
+(1, 500.00, 'credit', CURDATE(), CURTIME());
