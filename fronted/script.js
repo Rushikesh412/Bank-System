@@ -70,9 +70,7 @@ function register() {
         return;
     }
 
-    fetch(`${API_BASE}/register`, {
-        method: "POST",
-        hAPI("/register", {
+    fetchAPI("/register", {
         method: "POST",
         body: JSON.stringify({ name, contact, email, address, dob, password, internetBanking })
     })
@@ -90,7 +88,9 @@ function register() {
             document.getElementById("internetBanking").checked = false;
         }
     })
-    .catch(err => alert("Registration Error: " + err.message
+    .catch(err => alert("Registration Error: " + err.message));
+}
+
 function createCustomerAdmin() {
     const name = document.getElementById("adminName").value.trim();
     const contact = document.getElementById("adminContact").value.trim();
@@ -181,9 +181,7 @@ function getAccountDetails() {
         return;
     }
 
-    fetch(`${API_BASE}/account/${accountNumber}`)
-    .then(res => res.json())
-    .thenAPI(`/account/${accountNumber}`)
+    fetchAPI(`/account/${accountNumber}`)
     .then(data => {
         if (data.error) {
             alert(data.error);
@@ -195,7 +193,9 @@ function getAccountDetails() {
             document.getElementById("accountDetails").style.display = "block";
         }
     })
-    .catch(err => alert("Error fetching account details: " + err.message
+    .catch(err => alert("Error fetching account details: " + err.message));
+}
+
 function getCustomerLoginId() {
     return localStorage.getItem("customerLoginId");
 }
